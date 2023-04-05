@@ -13,13 +13,7 @@ window.geometry("700x500")
 
 checkmarks = {
     'TX': IntVar(value=1),
-    'RX': IntVar(value=1),
-    '1': IntVar(value=1),
-    '3': IntVar(value=0),
-    '5': IntVar(value=1),
-    '7': IntVar(value=0),
-    '11': IntVar(value=0),
-    '': IntVar(value=0)
+    'RX': IntVar(value=1)
 }
 
 mapping = {
@@ -38,6 +32,7 @@ outputs = {
     '1': {},
     '2': {},
     '3': {},
+    '4': {},
     '5': {},
     '6': {},
     '7': {},
@@ -48,6 +43,7 @@ times = {
     '1': [],
     '2': [],
     '3': [],
+    '4': [],
     '5': [],
     '6': [],
     '7': [],
@@ -55,16 +51,7 @@ times = {
     '12': [],
     '': []
 }
-titles = {
-    '1': '',
-    '2': '',
-    '3': '',
-    '5': '',
-    '6': '',
-    '7': '',
-    '11': '',
-    '12': ''
-}
+titles = {}
 
 
 def choose_file():
@@ -73,45 +60,47 @@ def choose_file():
         initialdir="/", title="Select a File", filetypes=(("All files", "*.*"), ("Text files", "*.txt*")))
 
 
-def create_graph(m1, m2, m3=''):
-    times_1 = np.array(times[m1])
-    times_2 = np.array(times[m2])
-    times_3 = np.array(times[m3])
+def create_graph(m):
+    times_1 = np.array(times[m[0]])
+    times_2 = np.array(times[m[1]])
+    times_3 = np.array([])
+    if len(m) > 2:
+        times_3 = np.array(times[m[2]])
     sum_times = np.concatenate((times_1, times_2, times_3), axis=None)
     sum_times = np.sort(sum_times)
     sum_times = np.unique(sum_times)
     # do a for loop to add all port 1
     speed_1, speed_2 = [], []
     for t in sum_times:
-        if t in outputs[m1]:
-            speed_1.append(outputs[m1][t])
+        if t in outputs[m[0]]:
+            speed_1.append(outputs[m[0]][t])
         else:
             if len(speed_1) > 0:
                 speed_1.append(speed_1[-1])
             else:
-                speed_1.append(max(outputs[m1].values()))
-        if t in outputs[m2]:
-            speed_2.append(outputs[m2][t])
+                speed_1.append(max(outputs[m[0]].values()))
+        if t in outputs[m[1]]:
+            speed_2.append(outputs[m[1]][t])
         else:
             if len(speed_2) > 0:
                 speed_2.append(speed_2[-1])
             else:
-                speed_2.append(max(outputs[m2].values()))
+                speed_2.append(max(outputs[m[1]].values()))
 
     total_speed = [x + y for x, y in zip(speed_1, speed_2)]
     speed_3 = []
 
-    if len(times[m3]) > 0 and checkmarks[m3].get() == 1:
+    if len(m) > 2:
 
         for t in sum_times:
 
-            if t in outputs[m3]:
-                speed_3.append(outputs[m3][t])
+            if t in outputs[m[2]]:
+                speed_3.append(outputs[m[2]][t])
             else:
                 if len(speed_3) > 0:
                     speed_3.append(speed_3[-1])
                 else:
-                    speed_3.append(max(outputs[m3].values()))
+                    speed_3.append(max(outputs[m[2]].values()))
         total_speed = [x + y for x, y in zip(total_speed, speed_3)]
     # print(total_speed)
     # get downtime
@@ -125,19 +114,18 @@ def create_graph(m1, m2, m3=''):
             totaly.append(totaly[-1])
             y1.append(y1[-1])
             y2.append(y2[-1])
-            if len(times[m3]) > 0 and checkmarks[m3].get() == 1:
+            if len(m)>2:
                 y3.append(y3[-1])
         totalx.append(sum_times[i])
         totaly.append(total_speed[i])
         y1.append(speed_1[i])
         y2.append(speed_2[i])
-        if len(times[m3]) > 0 and checkmarks[m3].get() == 1:
+        if len(m)>2:
             y3.append(speed_3[i])
 
     down_time = 0
     for i in range(1, len(totaly)):
-        if totaly[i] < 300 and totaly[i-1] < 300 and totalx[i] != totalx[i-1]:
-            print(m1, m2, m3)
+        if totaly[i] < int(threshold.get()) and totaly[i-1] < int(threshold.get()) and totalx[i] != totalx[i-1]:
             print('time interval caught: ', str(totalx[i-1]), str(totalx[i]))
             print('down time', down_time, 'plus', str(
                 (totalx[i]-totalx[i-1]).total_seconds()))
@@ -146,39 +134,12 @@ def create_graph(m1, m2, m3=''):
 
 
 def onStart():
+    data1 = g1.get().split(",")
+    data2 = g2.get().split(",")
+    data3 = g3.get().split(",")
     global outputs, times, titles
-    outputs = {
-        '1': {},
-        '2': {},
-        '3': {},
-        '5': {},
-        '6': {},
-        '7': {},
-        '11': {},
-        '12': {},
-    }
-
-    times = {
-        '1': [],
-        '2': [],
-        '3': [],
-        '5': [],
-        '6': [],
-        '7': [],
-        '11': [],
-        '12': [],
-        '': []
-    }
-    titles = {
-        '1': '',
-        '2': '',
-        '3': '',
-        '5': '',
-        '6': '',
-        '7': '',
-        '11': '',
-        '12': ''
-    }
+    outputs = {}
+    times = {}
     # try:
     month_val = month.get()
     year_val = year.get()
@@ -192,14 +153,19 @@ def onStart():
 
             if line[10].strip() in mapping and len(slot_num) == 6 and date_time_obj.month == int(month_val) and date_time_obj.year == int(year_val) and ((checkmarks['TX'].get() == 1 and modulation == "TX Modulation") or (checkmarks['RX'].get() == 1 and modulation == "RX Modulation")):
                 speed = mapping[line[10].strip()]
-
                 if "0" in slot_num:
                     titles[slot_num[5]] = line[8]
-                    times[slot_num[5]].append(date_time_obj)
+                    if slot_num[5] in times:
+                        times[slot_num[5]].append(date_time_obj)
+                    else:
+                        times[slot_num[5]] = [date_time_obj]
                     outputs[slot_num[5]][date_time_obj] = speed
                 else:
                     titles[slot_num[4:6]] = line[8]
-                    times[slot_num[4:6]].append(date_time_obj)
+                    if slot_num[4:6] in times:
+                        times[slot_num[4:6]].append(date_time_obj)
+                    else:
+                        times[slot_num[4:6]] = [date_time_obj]
                     outputs[slot_num[4:6]][date_time_obj] = speed
     # except:
     #  print("Error Occured, try again!")
@@ -209,33 +175,39 @@ def onStart():
         outputs[k] = {i: outputs[k][i]
                       for i in sorted(list(outputs[k].keys()))}
 
-    modems1, totals1 = create_graph('1', '2', '3')
-    modems2, totals2 = create_graph('5', '6', '7')
+    modems1, totals1 = create_graph(data1)
+    modems2, totals2 = create_graph(data2)
     modems3, totals3 = [], []
-    if len(times['11']) > 0 and len(times['12']) > 0:
-        modems3, totals3 = create_graph('11', '12')
+    if len(data3) > 0:
+        modems3, totals3 = create_graph(data3)
 
     graph_info = [[modems1, totals1], [modems2, totals2], [modems3, totals3]]
     fig, axs = plt.subplots(3, figsize=(12, 12))
     for i in range(3):
         temp1, temp2, temp3 = '', '', ''
         if i == 0:
-            temp1 = '1'
-            temp2 = '2'
-            temp3 = '3'
+            temp1 = data1[0]
+            temp2 = data1[1]
+            temp3 = ""
+            if len(data1) > 2:
+                temp3 = data1[2]
         elif i == 1:
-            temp1 = '5'
-            temp2 = '6'
-            temp3 = '7'
+            temp1 = data2[0]
+            temp2 = data2[1]
+            temp3 = ""
+            if len(data2) > 2:
+                temp3 = data2[2]
         else:
-            temp1 = '11'
-            temp2 = '12'
-            temp3 = ''
+            temp1 = data3[0]
+            temp2 = data3[1]
+            temp3 = ""
+            if len(data3) > 2:
+                temp3 = data3[2]
         if len(graph_info[i][0]) > 0 and len(graph_info[i][1][1]) > 0:
             locator = mdates.AutoDateLocator()
 
             axs[i].title.set_text(
-                titles[temp1]+"     "+"Total time under 300 Mb/s: "+str(graph_info[i][1][2])+" seconds")
+                titles[temp1]+"     "+"Total time under "+threshold.get()+" Mb/s: "+str(graph_info[i][1][2])+" seconds")
             axs[i].set_facecolor('#cccccc')
             axs[i].xaxis.set_minor_locator(mdates.DayLocator(interval=1))
             axs[i].xaxis.set_major_locator(locator)
@@ -277,34 +249,37 @@ year = CTkEntry(master=window, placeholder_text="Enter a year",
                 width=120, height=25, border_width=2, corner_radius=10)
 year.place(relx=0.5, rely=0.4, anchor=CENTER)
 
-filters = CTkLabel(window, text="Filters")
-filters.place(relx=0.5, rely=0.5, anchor=CENTER)
-
-
 tx = CTkCheckBox(master=window, text="TX", variable=checkmarks['TX'])
-tx.place(relx=0.4, rely=0.6, anchor=CENTER)
+tx.place(relx=0.4, rely=0.5, anchor=CENTER)
 
 rx = CTkCheckBox(master=window, text="RX", variable=checkmarks['RX'])
-rx.place(relx=0.6, rely=0.6, anchor=CENTER)
+rx.place(relx=0.6, rely=0.5, anchor=CENTER)
+
+g1label = CTkLabel(window, text="Graph 1 Modems: ")
+g1label.place(relx=0.3, rely=0.6, anchor=CENTER)
+
+g2label = CTkLabel(window, text="Graph 2 Modems: ")
+g2label.place(relx=0.3, rely=0.7, anchor=CENTER)
+
+g3label = CTkLabel(window, text="Graph 3 Modems: ")
+g3label.place(relx=0.3, rely=0.8, anchor=CENTER)
 
 
-m1 = CTkCheckBox(master=window, text="Modem 1/2", variable=checkmarks['1'])
-m1.place(relx=0.2, rely=0.7, anchor=CENTER)
 
-m3 = CTkCheckBox(master=window, text="Modem 3", variable=checkmarks['3'])
-m3.place(relx=0.35, rely=0.7, anchor=CENTER)
+g1 = CTkEntry(master=window, placeholder_text="Enter modems (seperated by commas)", width=120, height=25, border_width=2, corner_radius=10)
+g1.place(relx=0.5, rely=0.6, anchor=CENTER)
 
-m5 = CTkCheckBox(master=window, text="Modem 5/6", variable=checkmarks['5'])
-m5.place(relx=0.5, rely=0.7, anchor=CENTER)
+g2 = CTkEntry(master=window, placeholder_text="Enter modems (seperated by commas)", width=120, height=25, border_width=2, corner_radius=10)
+g2.place(relx=0.5, rely=0.7, anchor=CENTER)
 
-m7 = CTkCheckBox(master=window, text="Modem 7", variable=checkmarks['7'])
-m7.place(relx=0.65, rely=0.7, anchor=CENTER)
+g3 = CTkEntry(master=window, placeholder_text="Enter modems (seperated by commas)", width=120, height=25, border_width=2, corner_radius=10)
+g3.place(relx=0.5, rely=0.8, anchor=CENTER)
 
-m11 = CTkCheckBox(master=window, text="Modem 11/12", variable=checkmarks['11'])
-m11.place(relx=0.8, rely=0.7, anchor=CENTER)
+threshold = CTkEntry(master=window, placeholder_text="Enter threshold", width=120, height=25, border_width=2, corner_radius=10)
+threshold.place(relx=0.5, rely=0.9, anchor=CENTER)
 
 load_button = CTkButton(window, text="Start", command=onStart,
                         fg_color="#119149", hover_color="#45ba78")
-load_button.place(relx=0.5, rely=0.8, anchor=CENTER)
+load_button.place(relx=0.5, rely=0.97, anchor=CENTER)
 
 window.mainloop()
