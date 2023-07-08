@@ -9,15 +9,16 @@ This project is part of my work at Williams Communcations as a Software Develope
 
 ## Here is a display of how the application requests user input and shows the graph analysis using Python and matplotlib
 
+<p align = center>
 <img src="/demo_content/pic2.PNG" alt="" width="350" height="250" border="10" />
 <img src="/demo_content/pic1.PNG" alt="" width="350" height="250" border="10" />
-</a>
+</p>
 
 ## How to use this app properly
 
 The way to test this project would be to clone this project, install dependencies for Python, and try out the log files in the test-files folder. You can also choose your own file to analyze, but the formatting needs to be a standard EventLog file from a Microwave Radio. Here is a step by step for the installation:
 
-1. clone this project
+1. Clone this project
 2. Install Python and required dependencing through pip, which are tkinter, matplotlib, numpy, customtkinter
 3. Import your own EventLog or use one of provided test files
 4. Run the application and input the required data, including month, year, ports for each graph, and combined threshold that would trigger an alarm
