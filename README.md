@@ -9,8 +9,8 @@ This project is part of my work at Williams Communcations as a Software Develope
 
 ## Here is a display of how the application requests user input and shows the graph analysis using Python and matplotlib
 
-<img src="/demo_content/pic1.PNG" alt="Watch the series" width="240" height="180" border="10" />
-<img src="/demo_content/pic2.PNG" alt="Watch the series" width="240" height="180" border="10" />
+<img src="/demo_content/pic2.PNG" alt="" width="350" height="250" border="10" />
+<img src="/demo_content/pic1.PNG" alt="" width="350" height="250" border="10" />
 </a>
 
 ## How to use this app properly
